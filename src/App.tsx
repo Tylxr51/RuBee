@@ -2,7 +2,6 @@ import { Instance, Instances, OrbitControls } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { useState } from "react";
 import * as THREE from "three";
-import { radToDeg } from "three/src/math/MathUtils.js";
 
 // Notes:
 // Indexing runs centre outwards, anticlockwise
@@ -149,73 +148,6 @@ const getNeighboursHexFromHex = (
     return NeighbourArray;
 };
 
-const getIndexFromHex = ({ q, r }: HexCoord): number => {
-    const centre = r === 0 && q === 0;
-    const URSegmentCondition = q >= 1 && r <= 0;
-    const ULSegmentCondition = q <= 0 && -q - r >= 1;
-    const DRCondition = r >= 0 && -q - r <= 0;
-
-    switch (true) {
-        case centre: {
-            return 0;
-        }
-        case URSegmentCondition: {
-            return -r * (GRID_HEX_RADIUS - 1) + q;
-        }
-        case ULSegmentCondition: {
-            const s = -q - r;
-            return -q * (GRID_HEX_RADIUS - 1) + s + (GRID_HEX_COUNT - 1) / 3;
-        }
-        case DRCondition: {
-            const s = -q - r;
-            return (
-                -s * (GRID_HEX_RADIUS - 1) + r + 2 * ((GRID_HEX_COUNT - 1) / 3)
-            );
-        }
-        default: {
-            throw new Error(ERROR_INVALID_SEGMENT);
-        }
-    }
-};
-
-const getHexFromIndex = (i: number): HexCoord => {
-    const offset = i - 1;
-    const segmentCount = COUNT_MINUS_CENTRE / 3;
-    const segment = Math.floor(offset / segmentCount);
-    const column = offset % RADIUS_MINUS_CENTRE;
-    const row = Math.floor(offset / RADIUS_MINUS_CENTRE);
-    const segmentShift = COUNT_MINUS_CENTRE / (RADIUS_MINUS_CENTRE * 3);
-
-    switch (segment) {
-        case -1: {
-            // centre
-            return { q: 0, r: 0 };
-        }
-        case 0: {
-            // UR segment
-            const q = column + 1;
-            const r = -row;
-            return { q, r };
-        }
-        case 1: {
-            // UL segment
-            const q = -(row - segmentShift);
-            const r = -column - q - 1;
-            return { q, r };
-        }
-        case 2: {
-            // DR segment
-            const r = column + 1;
-            const q = row - r - 2 * segmentShift;
-            return { q, r };
-        }
-        default: {
-            // error handling
-            throw new Error(ERROR_INVALID_SEGMENT);
-        }
-    }
-};
-
 const getXYZFromHex = ({ q, r }: HexCoord): THREE.Vector3 => {
     return new THREE.Vector3().addVectors(
         q_UNIT_VECTOR.clone().multiplyScalar(q),
@@ -277,8 +209,10 @@ function HexInstances() {
         >
             <circleGeometry args={[HEX_SIZE, HEX_SIDES, HEX_ROTATION]} />
             <meshBasicMaterial side={THREE.DoubleSide} />
-            <HexCluster centre={{ q: 0, r: 0 }} radius={2} />
+            <HexCluster centre={{ q: 0, r: 0 }} radius={3} />
             <HexCluster centre={{ q: 5, r: 3 }} radius={4} />
+            <HexCluster centre={{ q: -8, r: -4 }} radius={6} />
+            <HexCluster centre={{ q: 8, r: -4 }} radius={2} />
         </Instances>
     );
 }
