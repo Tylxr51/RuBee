@@ -18,11 +18,9 @@ const HEX_SIZE = 0.2;
 const HEX_SIDES = 6;
 const HEX_ROTATION = Math.PI / 2;
 
+// Now redundant, should perhaps define the boundaries of the grid so it isnt infinite?
 const GRID_HEX_RADIUS = 4;
 const GRID_HEX_COUNT = 3 * GRID_HEX_RADIUS * (GRID_HEX_RADIUS - 1) + 1;
-
-const COUNT_MINUS_CENTRE = GRID_HEX_COUNT - 1;
-const RADIUS_MINUS_CENTRE = GRID_HEX_RADIUS - 1;
 
 // Trig constants
 const COS_PI_OVER_6 = Math.cos(Math.PI / 6);
@@ -158,25 +156,30 @@ const getXYZFromHex = ({ q, r }: HexCoord): THREE.Vector3 => {
 function HexCell({
     position,
     hexCoord: { q, r },
+    clusterData,
 }: {
     position: THREE.Vector3;
     hexCoord: HexCoord;
+    clusterData: ClusterData;
 }) {
     // const nicecoloring = new THREE.Color().setRGB(
     //     (position.x / 70 + 0.2) / 2,
     //     (position.y / 70 + 0.1) / 2,
     //     (position.x / 140 + 0.2) / 2,
     // );
+    const color =
+        q >= 1 && r <= 0 ? "red" : q <= 0 && -q - r >= 1 ? "green" : "blue";
     return (
         <Instance
+            userData={{
+                hexCoord: { q, r },
+                ClusterName: clusterData.clusterName,
+            }}
             position={position}
-            color={
-                q >= 1 && r <= 0
-                    ? "red"
-                    : q <= 0 && -q - r >= 1
-                      ? "green"
-                      : "blue"
-            }
+            color={clusterData.color}
+            onPointerEnter={(e) => {
+                console.log(e.object.userData);
+            }}
         ></Instance>
     );
 }
@@ -184,9 +187,11 @@ function HexCell({
 function HexCluster({
     centre: { q, r },
     radius,
+    clusterData,
 }: {
     centre: HexCoord;
     radius: number;
+    clusterData: ClusterData;
 }) {
     const clusterArray = getNeighboursHexFromHex({ q, r }, radius, true).map(
         (v) => (
@@ -194,6 +199,7 @@ function HexCluster({
                 key={`${v.q},${v.r}`}
                 hexCoord={v}
                 position={getXYZFromHex(v)}
+                clusterData={clusterData}
             ></HexCell>
         ),
     );
@@ -202,6 +208,11 @@ function HexCluster({
 }
 
 function HexInstances() {
+    const cluster1 = new ClusterData("one", new THREE.Color(1, 1, 0));
+    const cluster2 = new ClusterData("two", new THREE.Color(0, 1, 1));
+    const cluster3 = new ClusterData("three", new THREE.Color(1, 0, 1));
+    const cluster4 = new ClusterData("four", new THREE.Color(1, 1, 1));
+
     return (
         <Instances
             limit={50000} // Optional: max amount of items (for calculating buffer size)
@@ -209,10 +220,26 @@ function HexInstances() {
         >
             <circleGeometry args={[HEX_SIZE, HEX_SIDES, HEX_ROTATION]} />
             <meshBasicMaterial side={THREE.DoubleSide} />
-            <HexCluster centre={{ q: 0, r: 0 }} radius={3} />
-            <HexCluster centre={{ q: 5, r: 3 }} radius={4} />
-            <HexCluster centre={{ q: -8, r: -4 }} radius={6} />
-            <HexCluster centre={{ q: 8, r: -4 }} radius={2} />
+            <HexCluster
+                centre={{ q: 0, r: 0 }}
+                radius={3}
+                clusterData={cluster1}
+            />
+            <HexCluster
+                centre={{ q: 5, r: 3 }}
+                radius={4}
+                clusterData={cluster2}
+            />
+            <HexCluster
+                centre={{ q: -8, r: -4 }}
+                radius={6}
+                clusterData={cluster3}
+            />
+            <HexCluster
+                centre={{ q: 8, r: -4 }}
+                radius={2}
+                clusterData={cluster4}
+            />
         </Instances>
     );
 }
@@ -220,10 +247,7 @@ function HexInstances() {
 export default function Manager() {
     return (
         <>
-            <div
-                id="canvas-container"
-                style={{ width: "95vw", height: "95vh" }}
-            >
+            <div id="canvas-container" style={{ height: "98vh" }}>
                 <Canvas style={{ height: "100%" }}>
                     <OrbitControls />
                     <HexInstances />
@@ -231,4 +255,14 @@ export default function Manager() {
             </div>
         </>
     );
+}
+
+class ClusterData {
+    clusterName: string;
+    color: THREE.Color;
+
+    constructor(clusterName: string, color: THREE.Color) {
+        this.clusterName = clusterName;
+        this.color = color;
+    }
 }
