@@ -59,6 +59,94 @@ const getHexNegativeS = ({ q, r }: HexCoord): HexCoord => {
     return { q: q - 1, r: r + 1 };
 };
 
+const getClusterIndexFromHex = (
+    clusterData: ClusterData,
+    { q: hexQ, r: hexR }: HexCoord,
+): number => {
+    const radius = clusterData.radius;
+    const radiusMinusCentre = radius - 1;
+    const count = clusterData.count;
+    const countMinusCentre = count - 1;
+    const { q: clusterCentreQ, r: clusterCentreR }: HexCoord =
+        clusterData.centre;
+
+    const q = hexQ - clusterCentreQ;
+    const r = hexR - clusterCentreR;
+
+    const centreCondition = r === 0 && q === 0;
+    const URSegmentCondition = q >= 1 && r <= 0;
+    const ULSegmentCondition = q <= 0 && -q - r >= 1;
+    const DRCondition = r >= 0 && -q - r <= 0;
+
+    switch (true) {
+        case centreCondition: {
+            return 0;
+        }
+        case URSegmentCondition: {
+            return -r * radiusMinusCentre + q;
+        }
+        case ULSegmentCondition: {
+            const s = -q - r;
+            return -q * radiusMinusCentre + s + countMinusCentre / 3;
+        }
+        case DRCondition: {
+            const s = -q - r;
+            return -s * radiusMinusCentre + r + 2 * (countMinusCentre / 3);
+        }
+        default: {
+            throw new Error(ERROR_INVALID_SEGMENT);
+        }
+    }
+};
+
+const getHexFromClusterIndex = (
+    clusterData: ClusterData,
+    i: number,
+): HexCoord => {
+    const radius = clusterData.radius;
+    const radiusMinusCentre = radius - 1;
+    const count = clusterData.count;
+    const countMinusCentre = count - 1;
+    const centreOffset = i - 1;
+    const { q: clusterCentreQ, r: clusterCentreR }: HexCoord =
+        clusterData.centre;
+
+    const segmentCount = countMinusCentre / 3;
+    const segment = Math.floor(centreOffset / segmentCount);
+    const column = centreOffset % radiusMinusCentre;
+    const row = Math.floor(centreOffset / radiusMinusCentre);
+    const segmentShift = countMinusCentre / (radiusMinusCentre * 3);
+
+    switch (segment) {
+        case -1: {
+            // centre
+            return { q: clusterCentreQ, r: clusterCentreR };
+        }
+        case 0: {
+            // UR segment
+            const q = column + 1;
+            const r = -row;
+            return { q: q + clusterCentreQ, r: r + clusterCentreR };
+        }
+        case 1: {
+            // UL segment
+            const q = -(row - segmentShift);
+            const r = -column - q - 1;
+            return { q: q + clusterCentreQ, r: r + clusterCentreR };
+        }
+        case 2: {
+            // DR segment
+            const r = column + 1;
+            const q = row - r - 2 * segmentShift;
+            return { q: q + clusterCentreQ, r: r + clusterCentreR };
+        }
+        default: {
+            // error handling
+            throw new Error(ERROR_INVALID_SEGMENT);
+        }
+    }
+};
+
 const makeHexCoordsArrFromQRArr = (
     rowArr: number[],
     rowIncrement: number,
@@ -169,11 +257,14 @@ function HexCell({
     // );
     const color =
         q >= 1 && r <= 0 ? "red" : q <= 0 && -q - r >= 1 ? "green" : "blue";
+    const index = getClusterIndexFromHex(clusterData, { q, r });
     return (
         <Instance
             userData={{
                 hexCoord: { q, r },
-                ClusterName: clusterData.clusterName,
+                clusterName: clusterData.clusterName,
+                clusterArrayValue: clusterData.clusterArray[index],
+                index: index,
             }}
             position={position}
             color={clusterData.color}
@@ -184,34 +275,48 @@ function HexCell({
     );
 }
 
-function HexCluster({
-    centre: { q, r },
-    radius,
-    clusterData,
-}: {
-    centre: HexCoord;
-    radius: number;
-    clusterData: ClusterData;
-}) {
-    const clusterArray = getNeighboursHexFromHex({ q, r }, radius, true).map(
-        (v) => (
-            <HexCell
-                key={`${v.q},${v.r}`}
-                hexCoord={v}
-                position={getXYZFromHex(v)}
-                clusterData={clusterData}
-            ></HexCell>
-        ),
-    );
+function HexCluster({ clusterData }: { clusterData: ClusterData }) {
+    const clusterArray = getNeighboursHexFromHex(
+        clusterData.centre,
+        clusterData.radius,
+        true,
+    ).map((v) => (
+        <HexCell
+            key={`${v.q},${v.r}`}
+            hexCoord={v}
+            position={getXYZFromHex(v)}
+            clusterData={clusterData}
+        ></HexCell>
+    ));
 
     return <group>{clusterArray}</group>;
 }
 
 function HexInstances() {
-    const cluster1 = new ClusterData("one", new THREE.Color(1, 1, 0));
-    const cluster2 = new ClusterData("two", new THREE.Color(0, 1, 1));
-    const cluster3 = new ClusterData("three", new THREE.Color(1, 0, 1));
-    const cluster4 = new ClusterData("four", new THREE.Color(1, 1, 1));
+    const cluster1 = new ClusterData(
+        "one",
+        { q: 0, r: 0 },
+        3,
+        new THREE.Color(1, 1, 0),
+    );
+    const cluster2 = new ClusterData(
+        "two",
+        { q: 5, r: 3 },
+        4,
+        new THREE.Color(0, 1, 1),
+    );
+    const cluster3 = new ClusterData(
+        "three",
+        { q: -8, r: -4 },
+        6,
+        new THREE.Color(1, 0, 1),
+    );
+    const cluster4 = new ClusterData(
+        "four",
+        { q: 8, r: -4 },
+        2,
+        new THREE.Color(1, 1, 1),
+    );
 
     return (
         <Instances
@@ -220,26 +325,10 @@ function HexInstances() {
         >
             <circleGeometry args={[HEX_SIZE, HEX_SIDES, HEX_ROTATION]} />
             <meshBasicMaterial side={THREE.DoubleSide} />
-            <HexCluster
-                centre={{ q: 0, r: 0 }}
-                radius={3}
-                clusterData={cluster1}
-            />
-            <HexCluster
-                centre={{ q: 5, r: 3 }}
-                radius={4}
-                clusterData={cluster2}
-            />
-            <HexCluster
-                centre={{ q: -8, r: -4 }}
-                radius={6}
-                clusterData={cluster3}
-            />
-            <HexCluster
-                centre={{ q: 8, r: -4 }}
-                radius={2}
-                clusterData={cluster4}
-            />
+            <HexCluster clusterData={cluster1} />
+            <HexCluster clusterData={cluster2} />
+            <HexCluster clusterData={cluster3} />
+            <HexCluster clusterData={cluster4} />
         </Instances>
     );
 }
@@ -259,10 +348,23 @@ export default function Manager() {
 
 class ClusterData {
     clusterName: string;
+    centre: HexCoord;
+    radius: number;
     color: THREE.Color;
+    count: number;
+    clusterArray: number[];
 
-    constructor(clusterName: string, color: THREE.Color) {
+    constructor(
+        clusterName: string,
+        centre: HexCoord,
+        radius: number,
+        color: THREE.Color,
+    ) {
         this.clusterName = clusterName;
+        this.centre = centre;
+        this.radius = radius;
         this.color = color;
+        this.count = 3 * this.radius * (this.radius - 1) + 1;
+        this.clusterArray = Array.from({ length: this.count }, (_, i) => 2 * i);
     }
 }
