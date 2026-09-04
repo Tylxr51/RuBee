@@ -1,7 +1,7 @@
 import * as THREE from "three";
-import type { HexCoord } from "../types/HexCoord.ts";
+import type { HexCoord } from "../HexCell/HexCoord.ts";
 import * as utils from "./Constants.ts";
-import ClusterData from "./ClusterData.ts";
+import ClusterData from "../ClusterData/ClusterDataClass.ts";
 
 export const getClusterIndexFromHex = (
     clusterData: ClusterData,

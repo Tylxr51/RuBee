@@ -1,21 +1,15 @@
-import {
-    Circle,
-    Instance,
-    Instances,
-    OrbitControls,
-    Outlines,
-    Wireframe,
-} from "@react-three/drei";
+import { InstancedAttribute, OrbitControls } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState } from "react";
 import * as THREE from "three";
-import type { HexCoord } from "../types/HexCoord.ts";
-import * as utils from "../utils/Constants.ts";
-import * as move from "../utils/AdjacentHexMovements.ts";
-import ClusterData from "../utils/ClusterData.ts";
-import * as uc from "../utils/UnitConversions.ts";
-import outlineVertexShader from "../shaders/OutlineShader.vert.glsl?raw";
-import outlineFragmentShader from "../shaders/OutlineShader.frag.glsl?raw";
+import type { HexCoord } from "../HexCell/HexCoord.ts";
+import * as consts from "../utils/Constants.ts";
+import ClusterData from "../ClusterData/ClusterDataClass.ts";
+import * as unitConv from "../utils/UnitConversions.ts";
+import outlineVertexShader from "../HexCell/shaders/OutlineShader.vert.glsl?raw";
+import outlineFragmentShader from "../HexCell/shaders/OutlineShader.frag.glsl?raw";
+import { HexInstances, HexInstance } from "../HexCell/HexInstances.ts";
+import * as cdFuncs from "../ClusterData/ClusterDataFunctions.ts";
 
 // Notes:
 // Indexing runs centre outwards, anticlockwise
@@ -31,9 +25,10 @@ function HexCell({
     hexCoord: HexCoord;
     clusterData: ClusterData;
 }) {
-    const index = uc.getClusterIndexFromHex(clusterData, { q, r });
+    const index = unitConv.getClusterIndexFromHex(clusterData, { q, r });
+    const [outlineActive, setOutlineActive] = useState(false);
     return (
-        <Instance
+        <HexInstance
             userData={{
                 hexCoord: { q, r },
                 clusterName: clusterData.clusterName,
@@ -42,100 +37,80 @@ function HexCell({
             }}
             position={position}
             color={clusterData.color}
-            onPointerEnter={(e) => {
+            onPointerEnter={() => {
+                setOutlineActive(true);
+            }}
+            onPointerLeave={() => {
+                setOutlineActive(false);
+            }}
+            onClick={(e) => {
                 console.log(e.object.userData);
             }}
-        ></Instance>
+            aOutlineActive={outlineActive}
+        ></HexInstance>
     );
 }
 
-function HexCluster({ clusterData }: { clusterData: ClusterData }) {
-    const clusterArray = uc
+function MakeClusterCells({ clusterData }: { clusterData: ClusterData }) {
+    const clusterArray = unitConv
         .getNeighboursHexFromHex(clusterData.centre, clusterData.radius, true)
         .map((v) => (
             <HexCell
-                key={`${v.q},${v.r}`}
+                key={`cell-${v.q},${v.r}`}
                 hexCoord={v}
-                position={uc.getXYZFromHex(v)}
+                position={unitConv.getXYZFromHex(v)}
                 clusterData={clusterData}
-            ></HexCell>
+            />
         ));
 
     return <group>{clusterArray}</group>;
 }
 
-function HexInstances() {
-    const cluster1 = new ClusterData(
-        "one",
-        { q: 0, r: 0 },
-        3,
-        new THREE.Color(1, 1, 0),
-    );
-    const cluster2 = new ClusterData(
-        "two",
-        { q: 5, r: 3 },
-        4,
-        new THREE.Color(0, 1, 1),
-    );
-    const cluster3 = new ClusterData(
-        "three",
-        { q: -8, r: -4 },
-        6,
-        new THREE.Color(1, 0, 1),
-    );
-    const cluster4 = new ClusterData(
-        "four",
-        { q: 8, r: -4 },
-        2,
-        new THREE.Color(1, 1, 1),
-    );
+function ClusterManager() {
+    const clusterDataArray: ClusterData[] = cdFuncs.getClusterData();
+    const clusterHexCellsArray = clusterDataArray.map((clusterData, i) => (
+        <MakeClusterCells key={`solidCluster-${i}`} clusterData={clusterData} />
+    ));
 
     return (
         <>
-            <Instances
+            <HexInstances
                 limit={50000} // Optional: max amount of items (for calculating buffer size)
                 range={50000} // Optional: draw-range
+                position={[0, 0, 0]}
             >
                 <circleGeometry
-                    args={[utils.HEX_SIZE, utils.HEX_SIDES, utils.HEX_ROTATION]}
-                />
-                <meshBasicMaterial side={THREE.DoubleSide} />
-                <HexCluster clusterData={cluster1} />
-                <HexCluster clusterData={cluster2} />
-                <HexCluster clusterData={cluster3} />
-                <HexCluster clusterData={cluster4} />
-            </Instances>
-
-            <Instances
-                limit={50000} // Optional: max amount of items (for calculating buffer size)
-                range={50000} // Optional: draw-range
-                position={[0, 0, 0.002]}
-            >
-                <circleGeometry
-                    args={[utils.HEX_SIZE, utils.HEX_SIDES, utils.HEX_ROTATION]}
+                    args={[
+                        consts.HEX_SIZE, // + consts.HEX_OUTLINE_DOUBLING_ADJUSTMENT // stops overlapping outlines doubling thickness
+                        consts.HEX_SIDES,
+                        consts.HEX_ROTATION,
+                    ]}
                 />
                 <shaderMaterial
                     vertexShader={outlineVertexShader}
                     fragmentShader={outlineFragmentShader}
                     transparent
                     side={THREE.DoubleSide}
-                />
-                <HexCluster clusterData={cluster1} />
-                <HexCluster clusterData={cluster2} />
-                <HexCluster clusterData={cluster3} />
-                <HexCluster clusterData={cluster4} />
-            </Instances>
+                    uniforms={{
+                        outlineThickness: {
+                            value: consts.HEX_OUTLINE_THICKNESS,
+                        },
+                    }}
+                ></shaderMaterial>
+                <InstancedAttribute name="aOutlineActive" defaultValue={1.0} />
+                {clusterHexCellsArray}
+            </HexInstances>
         </>
     );
 }
 
-export default function Manager() {
+export default function CanvasManager() {
     return (
         <>
             <div id="canvas-container" style={{ height: "98vh" }}>
                 <Canvas style={{ height: "100%" }}>
                     <OrbitControls />
-                    <HexInstances />
+                    <ClusterManager />
                 </Canvas>
             </div>
         </>

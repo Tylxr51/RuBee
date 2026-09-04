@@ -1,4 +1,4 @@
-import type { HexCoord } from "../types/HexCoord.ts";
+import type { HexCoord } from "./HexCoord.ts";
 
 export const getHexPositiveQ = ({ q, r }: HexCoord): HexCoord => {
     return { q: q + 1, r };

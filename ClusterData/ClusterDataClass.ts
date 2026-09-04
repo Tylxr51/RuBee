@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import type { HexCoord } from "../types/HexCoord.ts";
+import type { HexCoord } from "../HexCell/HexCoord.ts";
 
 export default class ClusterData {
     clusterName: string;

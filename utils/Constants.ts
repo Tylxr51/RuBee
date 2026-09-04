@@ -4,6 +4,9 @@ import * as THREE from "three";
 export const HEX_SIZE = 0.2;
 export const HEX_SIDES = 6;
 export const HEX_ROTATION = Math.PI / 2;
+export const HEX_OUTLINE_THICKNESS = 0.01;
+export const HEX_OUTLINE_DOUBLING_ADJUSTMENT = HEX_OUTLINE_THICKNESS / 4;
+export const HEX_VALUE = 10; // make adjustable in future
 
 // Now redundant, should perhaps define the boundaries of the grid so it isnt infinite?
 // const GRID_HEX_RADIUS = 4;
