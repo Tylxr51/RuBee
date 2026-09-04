@@ -1,75 +1,27 @@
 import { InstancedAttribute, OrbitControls } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
-import { useState } from "react";
 import * as THREE from "three";
-import type { HexCoord } from "../HexCell/HexCoord.ts";
+import MakeClusterCells from "../HexCell/HexCellGeneration.tsx";
 import * as consts from "../utils/Constants.ts";
 import ClusterData from "../ClusterData/ClusterDataClass.ts";
-import * as unitConv from "../utils/UnitConversions.ts";
 import outlineVertexShader from "../HexCell/shaders/OutlineShader.vert.glsl?raw";
 import outlineFragmentShader from "../HexCell/shaders/OutlineShader.frag.glsl?raw";
-import { HexInstances, HexInstance } from "../HexCell/HexInstances.ts";
+import { HexInstances } from "../HexCell/HexInstances.ts";
 import * as cdFuncs from "../ClusterData/ClusterDataFunctions.ts";
+import * as accFuncs from "../Accounts/AccountFunctions.ts";
+
+accFuncs.createSavingsAccount("Account1", 890, { q: -5, r: 5 });
+accFuncs.createSavingsAccount("Account2", 200, { q: 4, r: -4 });
 
 // Notes:
 // Indexing runs centre outwards, anticlockwise
 // Segments run anticlockwise:
 // UR - Up Right, UL - Up Left, DR - Down Right
 
-function HexCell({
-    position,
-    hexCoord: { q, r },
-    clusterData,
-}: {
-    position: THREE.Vector3;
-    hexCoord: HexCoord;
-    clusterData: ClusterData;
-}) {
-    const index = unitConv.getClusterIndexFromHex(clusterData, { q, r });
-    const [outlineActive, setOutlineActive] = useState(false);
-    return (
-        <HexInstance
-            userData={{
-                hexCoord: { q, r },
-                clusterName: clusterData.clusterName,
-                clusterArrayValue: clusterData.clusterArray[index],
-                index: index,
-            }}
-            position={position}
-            color={clusterData.color}
-            onPointerEnter={() => {
-                setOutlineActive(true);
-            }}
-            onPointerLeave={() => {
-                setOutlineActive(false);
-            }}
-            onClick={(e) => {
-                console.log(e.object.userData);
-            }}
-            aOutlineActive={outlineActive}
-        ></HexInstance>
-    );
-}
-
-function MakeClusterCells({ clusterData }: { clusterData: ClusterData }) {
-    const clusterArray = unitConv
-        .getNeighboursHexFromHex(clusterData.centre, clusterData.radius, true)
-        .map((v) => (
-            <HexCell
-                key={`cell-${v.q},${v.r}`}
-                hexCoord={v}
-                position={unitConv.getXYZFromHex(v)}
-                clusterData={clusterData}
-            />
-        ));
-
-    return <group>{clusterArray}</group>;
-}
-
 function ClusterManager() {
     const clusterDataArray: ClusterData[] = cdFuncs.getClusterData();
     const clusterHexCellsArray = clusterDataArray.map((clusterData, i) => (
-        <MakeClusterCells key={`solidCluster-${i}`} clusterData={clusterData} />
+        <MakeClusterCells key={`cluster-${i}`} clusterData={clusterData} />
     ));
 
     return (
