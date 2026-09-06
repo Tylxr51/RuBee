@@ -1,5 +1,3 @@
-import * as THREE from "three";
-import ClusterData from "./ClusterDataClass";
 import * as accFunctions from "../Accounts/AccountFunctions";
 
 //temporary implementation
@@ -32,10 +30,10 @@ import * as accFunctions from "../Accounts/AccountFunctions";
 //     return [cluster1, cluster2, cluster3, cluster4];
 // }
 
-export function getClusterData() {
-    const clusterDataArray = accFunctions
+export function getVisualData() {
+    const visualDataArray = accFunctions
         .getAccountsArray()
-        .map((account) => account.clusterData);
+        .map((account) => account.visualData);
 
-    return clusterDataArray;
+    return visualDataArray;
 }

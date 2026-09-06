@@ -4,7 +4,7 @@ import * as THREE from "three";
 export const HEX_SIZE = 0.2;
 export const HEX_SIDES = 6;
 export const HEX_ROTATION = Math.PI / 2;
-export const HEX_OUTLINE_THICKNESS = 0.01;
+export const HEX_OUTLINE_THICKNESS = 0.03;
 export const HEX_OUTLINE_DOUBLING_ADJUSTMENT = HEX_OUTLINE_THICKNESS / 4;
 export const HEX_VALUE = 10; // make adjustable in future
 

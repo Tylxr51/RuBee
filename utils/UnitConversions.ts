@@ -1,18 +1,18 @@
 import * as THREE from "three";
-import type { HexCoord } from "../HexCell/HexCoord.ts";
+import type { HexCoord } from "../HexCell/HexCoordType.ts";
 import * as utils from "./Constants.ts";
-import ClusterData from "../ClusterData/ClusterDataClass.ts";
+import VisualData from "../VisualData/VisualDataClass.ts";
 
 export const getClusterIndexFromHex = (
-    clusterData: ClusterData,
+    visualData: VisualData,
     { q: hexQ, r: hexR }: HexCoord,
 ): number => {
-    const radius = clusterData.radius;
+    const radius = visualData.radius;
     const radiusMinusCentre = radius - 1;
-    const count = clusterData.count;
+    const count = visualData.clusterCount;
     const countMinusCentre = count - 1;
     const { q: clusterCentreQ, r: clusterCentreR }: HexCoord =
-        clusterData.centre;
+        visualData.centre;
 
     const q = hexQ - clusterCentreQ;
     const r = hexR - clusterCentreR;
@@ -44,16 +44,16 @@ export const getClusterIndexFromHex = (
 };
 
 export const getHexFromClusterIndex = (
-    clusterData: ClusterData,
+    visualData: VisualData,
     i: number,
 ): HexCoord => {
-    const radius = clusterData.radius;
+    const radius = visualData.radius;
     const radiusMinusCentre = radius - 1;
-    const count = clusterData.count;
+    const count = visualData.clusterCount;
     const countMinusCentre = count - 1;
     const centreOffset = i - 1;
     const { q: clusterCentreQ, r: clusterCentreR }: HexCoord =
-        clusterData.centre;
+        visualData.centre;
 
     const segmentCount = countMinusCentre / 3;
     const segment = Math.floor(centreOffset / segmentCount);

@@ -1,6 +1,6 @@
 import SavingsAccount from "./SavingsAccountClass.ts";
 import CurrentAccount from "./CurrentAccountClass.ts";
-import type { HexCoord } from "../HexCell/HexCoord.ts";
+import type { HexCoord } from "../HexCell/HexCoordType.ts";
 
 const accountsArray: (CurrentAccount | SavingsAccount)[] = [];
 

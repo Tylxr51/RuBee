@@ -16,5 +16,5 @@ void main() {
     vOutlineActive = aOutlineActive;
 
     // assign gl_position
-    gl_Position = projectionMatrix * viewMatrix * modelMatrix * instanceMatrix * vec4(position, 1.0);;
+    gl_Position = projectionMatrix * viewMatrix * modelMatrix * instanceMatrix * vec4(position, 1.0);
 }

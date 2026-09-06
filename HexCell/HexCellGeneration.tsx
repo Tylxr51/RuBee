@@ -1,31 +1,32 @@
 import { useState } from "react";
 import * as THREE from "three";
-import type { HexCoord } from "../HexCell/HexCoord.ts";
-import ClusterData from "../ClusterData/ClusterDataClass.ts";
+import type { HexCoord } from "./HexCoordType.ts";
+import type { Account } from "../Accounts/AccountType.ts";
 import * as unitConv from "../utils/UnitConversions.ts";
 import { HexInstance } from "../HexCell/HexInstances.ts";
 
 function HexCell({
     position,
     hexCoord: { q, r },
-    clusterData,
+    account,
 }: {
     position: THREE.Vector3;
     hexCoord: HexCoord;
-    clusterData: ClusterData;
+    account: Account;
 }) {
-    const index = unitConv.getClusterIndexFromHex(clusterData, { q, r });
+    const index = unitConv.getClusterIndexFromHex(account.visualData, {
+        q,
+        r,
+    });
     const [outlineActive, setOutlineActive] = useState(false);
     return (
         <HexInstance
             userData={{
-                hexCoord: { q, r },
-                clusterName: clusterData.clusterName,
-                clusterArrayValue: clusterData.clusterArray[index],
+                account: account,
                 index: index,
             }}
             position={position}
-            color={clusterData.color}
+            color={account.visualData.color}
             onPointerEnter={() => {
                 setOutlineActive(true);
             }}
@@ -40,21 +41,21 @@ function HexCell({
     );
 }
 
-export default function MakeClusterCells({
-    clusterData,
-}: {
-    clusterData: ClusterData;
-}) {
-    const clusterArray = unitConv
-        .getNeighboursHexFromHex(clusterData.centre, clusterData.radius, true)
+export default function CreateAccountCells({ account }: { account: Account }) {
+    const HexCellArray = unitConv
+        .getNeighboursHexFromHex(
+            account.visualData.centre,
+            account.visualData.radius,
+            true,
+        )
         .map((v) => (
             <HexCell
                 key={`cell-${v.q},${v.r}`}
                 hexCoord={v}
                 position={unitConv.getXYZFromHex(v)}
-                clusterData={clusterData}
+                account={account}
             />
         ));
 
-    return <group>{clusterArray}</group>;
+    return <group>{HexCellArray}</group>;
 }
