@@ -1,10 +1,8 @@
 import { OrbitControls } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import VisualiseAccounts from "../Accounts/VisualiseAccounts.tsx";
-import * as accFuncs from "../Accounts/AccountFunctions.ts";
-
-accFuncs.createSavingsAccount("Account1", 890, { q: -5, r: 5 });
-accFuncs.createSavingsAccount("Account2", 200, { q: 4, r: -4 });
+import { AccountsMenu } from "../Menu/Menu.tsx";
+import { AccountsProvider } from "../Accounts/accountsProvider.tsx";
 
 // Notes:
 // Indexing runs centre outwards, anticlockwise
@@ -15,10 +13,13 @@ export default function CanvasManager() {
     return (
         <>
             <div id="canvas-container" style={{ height: "98vh" }}>
-                <Canvas style={{ height: "100%" }}>
-                    <OrbitControls />
-                    <VisualiseAccounts />
-                </Canvas>
+                <AccountsProvider>
+                    <Canvas style={{ height: "100%" }}>
+                        <OrbitControls />
+                        <VisualiseAccounts />
+                    </Canvas>
+                    <AccountsMenu />
+                </AccountsProvider>
             </div>
         </>
     );

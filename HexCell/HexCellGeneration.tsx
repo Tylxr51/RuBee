@@ -1,7 +1,7 @@
 import { useState } from "react";
 import * as THREE from "three";
 import type { HexCoord } from "./HexCoordType.ts";
-import type { Account } from "../Accounts/AccountType.ts";
+import type { Account } from "../Accounts/AccountTypes.ts";
 import * as unitConv from "../utils/UnitConversions.ts";
 import { HexInstance } from "../HexCell/HexInstances.ts";
 
