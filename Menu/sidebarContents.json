@@ -1,0 +1,20 @@
+{
+    "Create Account": {
+        "title": "Create Account",
+        "entries": ["Name", "Amount", "q", "r"],
+        "functionName": "sidebarCreateAccount",
+        "buttonText": "Create"
+    },
+    "Delete Account": {
+        "title": "Delete Account",
+        "entries": ["Name"],
+        "functionName": "sidebarDeleteAccount",
+        "buttonText": "Delete"
+    },
+    "Show Account": {
+        "title": "Show Account",
+        "entries": [],
+        "functionName": "sidebarShowAccounts",
+        "buttonText": "Show Accounts"
+    }
+}

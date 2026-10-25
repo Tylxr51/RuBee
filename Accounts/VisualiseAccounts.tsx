@@ -1,6 +1,6 @@
 import { InstancedAttribute } from "@react-three/drei";
 import * as THREE from "three";
-import CreateAccountCells from "../HexCell/HexCellGeneration.tsx";
+import CreateHexCellCluster from "../HexCell/HexCellGeneration.tsx";
 import * as consts from "../utils/Constants.ts";
 import outlineVertexShader from "../HexCell/shaders/OutlineShader.vert.glsl?raw";
 import outlineFragmentShader from "../HexCell/shaders/OutlineShader.frag.glsl?raw";
@@ -14,7 +14,7 @@ export default function VisualiseAccounts() {
     const accountsArray: Account[] = accountsContext.accounts;
     // const accountsArray = accFuncs.getAccountsArray();
     const accountsHexCellsArray = accountsArray.map((account) => (
-        <CreateAccountCells key={account.accountName} account={account} />
+        <CreateHexCellCluster key={account.accountName} account={account} />
     ));
 
     return (

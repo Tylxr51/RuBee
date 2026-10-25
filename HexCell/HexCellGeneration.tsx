@@ -41,7 +41,11 @@ function HexCell({
     );
 }
 
-export default function CreateAccountCells({ account }: { account: Account }) {
+export default function CreateHexCellCluster({
+    account,
+}: {
+    account: Account;
+}) {
     const HexCellArray = unitConv
         .getNeighboursHexFromHex(
             account.visualData.centre,

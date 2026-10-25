@@ -2,7 +2,7 @@ import { createContext, useContext } from "react";
 import type { Account } from "./AccountTypes";
 import type { HexCoord } from "../HexCell/HexCoordType";
 
-type AccountsContextType = {
+export type AccountsContextType = {
     accounts: Account[];
     createAccount: (
         accountName: string,
